@@ -6,6 +6,9 @@ import webbrowser
 import time
 import json
 from flask import Flask, request, jsonify
+#import logging
+
+#logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
 load_dotenv()
@@ -95,22 +98,29 @@ def webhook():
     print("Parsed inner data:")
     print(json.dumps(data, indent=2))
     
+    metadata = data.get('Metadata', {})
+    guid = metadata.get('Guid', {})
+
+    if 'Guid' in metadata:
+        mbid = metadata['Guid'][0]['id'][7:]
+    else:
+        mbid = ""
+    
+
+    print(f'this is the ting: {mbid}')
+
+    track_info = {
+        'title': metadata.get('title'),
+        'artist': metadata.get('originalTitle') or metadata.get('grandparentTitle'),
+        'album': metadata.get('parentTitle'),
+        'album_artist': metadata.get('grandparentTitle'),
+        'track_number': metadata.get('index'),
+        'mbid': mbid # "id": "mbid://02c22765-7484-4120-823e-6b903a50f13e"
+    }
+
     if event in ['media.play', 'media.resume']:
-        metadata = data.get('Metadata', {})
-        guid = metadata.get('Guid', {})
+        
         if metadata.get('type') == 'track':
-            hkjsdgfs = metadata['Guid'][0]['id'][7:]
-
-            print(f'this is the ting: {hkjsdgfs}')
-
-            track_info = {
-                'title': metadata.get('title'),
-                'artist': metadata.get('originalTitle') or metadata.get('grandparentTitle'),
-                'album': metadata.get('parentTitle'),
-                'album_artist': metadata.get('grandparentTitle'),
-                'track_number': metadata.get('index'),
-                'mbid': hkjsdgfs # "id": "mbid://02c22765-7484-4120-823e-6b903a50f13e"
-            }
             try:
                 network.update_now_playing(
                     artist=track_info['artist'],
@@ -127,11 +137,21 @@ def webhook():
         # For pause events, we don't update Last.fm
         # Last.fm automatically clears now playing after a while
         print("Playback paused")
+    elif event == 'media.scrobble':
+        track_info['timestamp'] = time.time()
+        network.scrobble(
+                    artist=track_info['artist'],
+                    title=track_info['title'],
+                    album=track_info['album'],
+                    album_artist=track_info['album_artist'],
+                    track_number=track_info['track_number'],
+                    mbid=track_info['mbid'],
+                    timestamp=track_info['timestamp']
+                )
     else:
         print(f"Received event: {event}")
     
     return jsonify({"status": "success"}), 200
-
 
 
 def main():
