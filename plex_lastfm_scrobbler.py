@@ -16,6 +16,7 @@ PORT = os.getenv('PORT')
 # Plex configuration
 PLEX_URL = os.getenv('PLEX_URL')
 PLEX_TOKEN = os.getenv('PLEX_TOKEN')
+PLEX_USER = os.getenv('PLEX_USER') or ''
 
 # Last.fm configuration
 LASTFM_API_KEY = os.getenv('LASTFM_API_KEY')
@@ -56,13 +57,14 @@ def get_lastfm_session_key():
             print("Waiting for authorization...")
             time.sleep(5)
 
-def update_lastfm_now_playing(network, track_info):
-    if track_info:
-        network.update_now_playing(
-            artist=track_info['artist'],
-            title=track_info['title'],
-            album=track_info['album']
-        )
+# def update_lastfm_now_playing(network, track_info):
+#     if track_info:
+#         network.update_now_playing(
+#             artist=track_info['artist'],
+#             title=track_info['title'],
+#             album=track_info['album'],
+#             album_artist=track_info['album_artist']
+#         )
     
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -83,27 +85,42 @@ def webhook():
             return jsonify({"status": "error", "message": "Invalid payload JSON"}), 400
     else:
         data = outer_data
+
+    event = data.get('event')
+    username = data.get('Account', {}).get('title')
+
+    if PLEX_USER != '' and username != PLEX_USER:
+        return jsonify({"status": "ignored"}), 200
     
     print("Parsed inner data:")
     print(json.dumps(data, indent=2))
     
-    event = data.get('event')
-    
     if event in ['media.play', 'media.resume']:
         metadata = data.get('Metadata', {})
+        guid = metadata.get('Guid', {})
         if metadata.get('type') == 'track':
+            hkjsdgfs = metadata['Guid'][0]['id'][7:]
+
+            print(f'this is the ting: {hkjsdgfs}')
+
             track_info = {
                 'title': metadata.get('title'),
-                'artist': metadata.get('grandparentTitle'),
-                'album': metadata.get('parentTitle')
+                'artist': metadata.get('originalTitle') or metadata.get('grandparentTitle'),
+                'album': metadata.get('parentTitle'),
+                'album_artist': metadata.get('grandparentTitle'),
+                'track_number': metadata.get('index'),
+                'mbid': hkjsdgfs # "id": "mbid://02c22765-7484-4120-823e-6b903a50f13e"
             }
             try:
                 network.update_now_playing(
                     artist=track_info['artist'],
                     title=track_info['title'],
-                    album=track_info['album']
+                    album=track_info['album'],
+                    album_artist=track_info['album_artist'],
+                    track_number=track_info['track_number'],
+                    mbid=track_info['mbid']
                 )
-                print(f"Now playing: {track_info['artist']} - {track_info['title']}")
+                print(f"Now playing: {track_info['artist']} - {track_info['title']} ({track_info['album_artist']} - {track_info['album']})")                   
             except pylast.WSError as e:
                 print(f"Error updating now playing: {e}")
     elif event == 'media.pause':
