@@ -10,6 +10,9 @@ from flask import Flask, request, jsonify
 # Load environment variables
 load_dotenv()
 
+# Script configuration
+PORT = os.getenv('PORT')
+
 # Plex configuration
 PLEX_URL = os.getenv('PLEX_URL')
 PLEX_TOKEN = os.getenv('PLEX_TOKEN')
@@ -126,7 +129,7 @@ def main():
     )
 
     print("Script started. Waiting for Plex webhooks...")
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=PORT)
 
 if __name__ == "__main__":
     main()
