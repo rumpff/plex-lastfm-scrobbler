@@ -106,9 +106,6 @@ def webhook():
     else:
         mbid = ""
     
-
-    print(f'this is the ting: {mbid}')
-
     track_info = {
         'title': metadata.get('title'),
         'artist': metadata.get('originalTitle') or metadata.get('grandparentTitle'),
