@@ -71,9 +71,6 @@ def get_lastfm_session_key():
     
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    print("Received webhook payload:")
-    print(request.data)
-    
     if request.headers.get('Content-Type') == 'application/json':
         outer_data = request.json
     else:
@@ -95,8 +92,8 @@ def webhook():
     if PLEX_USER != '' and username != PLEX_USER:
         return jsonify({"status": "ignored"}), 200
     
-    print("Parsed inner data:")
-    print(json.dumps(data, indent=2))
+    #print("Parsed inner data:")
+    #print(json.dumps(data, indent=2))
     
     metadata = data.get('Metadata', {})
     guid = metadata.get('Guid', {})
@@ -115,7 +112,7 @@ def webhook():
         'mbid': mbid # "id": "mbid://02c22765-7484-4120-823e-6b903a50f13e"
     }
 
-    if event in ['media.play', 'media.resume']:
+    if event in ['media.play','playback.started', 'media.resume']:
         
         if metadata.get('type') == 'track':
             try:
@@ -127,7 +124,8 @@ def webhook():
                     track_number=track_info['track_number'],
                     mbid=track_info['mbid']
                 )
-                print(f"Now playing: {track_info['artist']} - {track_info['title']} ({track_info['album_artist']} - {track_info['album']})")                   
+                print(f"{PLEX_USER + ' is now playing:' if PLEX_USER else 'Now playing:'} {track_info['artist']} - {track_info['title']} ({track_info['album_artist']} - {track_info['album']})")
+                
             except pylast.WSError as e:
                 print(f"Error updating now playing: {e}")
     elif event == 'media.pause':
