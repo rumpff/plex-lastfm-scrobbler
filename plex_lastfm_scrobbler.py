@@ -144,7 +144,7 @@ def webhook():
                     )
             print(f"{username} scrobbled: {track_info['artist']} - {track_info['title']} (on {track_info['album_artist']} - {track_info['album']})")
     else:
-        print(f"Received event: {event}")
+        # print(f"Received event: {event}")
     
     return jsonify({"status": "success"}), 200
 
