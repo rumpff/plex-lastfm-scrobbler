@@ -31,8 +31,10 @@ pip install -r requirements.txt
 
 3. Copy the `.env.example` file in the project root, rename it to `.env` and add your configuration:
 ```
+PORT=your-port
 PLEX_URL=http://your-plex-server:32400
-PLEX_TOKEN=your-plex-x-token
+PLEX_TOKEN=your-x-plex-token
+PLEX_USER=your-plex-username # Required if server admin runs this script with their X-Plex-Token, for others can be left unset
 LASTFM_API_KEY=your-lastfm-api-key
 LASTFM_API_SECRET=your-lastfm-api-secret
 ```
