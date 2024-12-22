@@ -47,7 +47,7 @@ LASTFM_API_SECRET=your-lastfm-api-secret
 
 2. The script will prompt you to authorize the application with Last.fm if it's the first time running.
 
-3. Configure your Plex Media Server to send webhooks to `http://your-ip:5000/webhook`
+3. Configure your Plex Media Server to send webhooks to `http://your-ip:your-port/webhook`
 
 4. Play music on Plex, and it should now scrobble to Last.fm
 
