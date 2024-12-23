@@ -110,42 +110,41 @@ def webhook():
         'mbid': mbid
     }
 
-    if event in ['media.play','playback.started', 'media.resume']:
-        
-        if metadata.get('type') == 'track':
-            try:
-                network.update_now_playing(
-                    artist=track_info['artist'],
-                    title=track_info['title'],
-                    album=track_info['album'],
-                    album_artist=track_info['album_artist'],
-                    track_number=track_info['track_number'],
-                    mbid=track_info['mbid']
-                )
-                print(f"{username} is now playing: {track_info['artist']} - {track_info['title']} (on {track_info['album_artist']} - {track_info['album']})")
-                
-            except pylast.WSError as e:
-                print(f"Error updating now playing: {e}")
-    elif event == 'media.pause':
-        # For pause events, we don't update Last.fm
-        # Last.fm automatically clears now playing after a while
-        print("Playback paused")
-    elif event == 'media.scrobble':
-        if ENABLE_SCROBBLING:
-            track_info['timestamp'] = time.time()
-            network.scrobble(
+    if metadata.get('type') == 'track':
+        if event in ['media.play','playback.started', 'media.resume']:
+                try:
+                    network.update_now_playing(
                         artist=track_info['artist'],
                         title=track_info['title'],
                         album=track_info['album'],
                         album_artist=track_info['album_artist'],
                         track_number=track_info['track_number'],
-                        mbid=track_info['mbid'],
-                        timestamp=track_info['timestamp']
+                        mbid=track_info['mbid']
                     )
-            print(f"{username} scrobbled: {track_info['artist']} - {track_info['title']} (on {track_info['album_artist']} - {track_info['album']})")
-    #else:
-        #print(f"Received event: {event}")
-    
+                    print(f"{username} is now playing: {track_info['artist']} - {track_info['title']} (on {track_info['album_artist']} - {track_info['album']})")
+                    
+                except pylast.WSError as e:
+                    print(f"Error updating now playing: {e}")
+        elif event == 'media.pause':
+            # For pause events, we don't update Last.fm
+            # Last.fm automatically clears now playing after a while
+            print("Playback paused")
+        elif event == 'media.scrobble':
+            if ENABLE_SCROBBLING:
+                    track_info['timestamp'] = time.time()
+                    network.scrobble(
+                                artist=track_info['artist'],
+                                title=track_info['title'],
+                                album=track_info['album'],
+                                album_artist=track_info['album_artist'],
+                                track_number=track_info['track_number'],
+                                mbid=track_info['mbid'],
+                                timestamp=track_info['timestamp']
+                            )
+                    print(f"{username} scrobbled: {track_info['artist']} - {track_info['title']} (on {track_info['album_artist']} - {track_info['album']})")
+        #else:
+            #print(f"Received event: {event}")
+        
     return jsonify({"status": "success"}), 200
 
 
