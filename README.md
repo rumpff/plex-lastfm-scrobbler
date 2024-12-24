@@ -20,7 +20,7 @@ This project is a Python script that integrates Plex Media Server with Last.fm, 
 
 1. Clone this repository:
 ```
-git clone https://github.com/ozyz/plex-lastfm-scrobbler.git
+git clone https://github.com/rumpff/plex-lastfm-scrobbler.git
 cd plex-lastfm-scrobbler
 ```
 
