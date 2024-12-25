@@ -7,49 +7,24 @@ import time
 import json
 from flask import Flask, request, jsonify
 import logging
+import yaml
 
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+with open("config.yaml", "r") as file:
+    config = yaml.safe_load(file)
 
-# Load environment variables
-load_dotenv()
+users = config["users"]
 
-# Script configuration
-PORT = os.getenv('PORT')
-
-# Plex configuration
-PLEX_URL = os.getenv('PLEX_URL')
-PLEX_TOKEN = os.getenv('PLEX_TOKEN')
-PLEX_USER = os.getenv('PLEX_USER') or ''
-ENABLE_SCROBBLING = os.getenv('ENABLE_SCROBBLING', 'false').strip().lower() == 'true'
-
-# Last.fm configuration
-LASTFM_API_KEY = os.getenv('LASTFM_API_KEY')
-LASTFM_API_SECRET = os.getenv('LASTFM_API_SECRET')
-LASTFM_SESSION_KEY = os.getenv('LASTFM_SESSION_KEY')
+# log = logging.getLogger('werkzeug')
+# log.setLevel(logging.ERROR)
 
 # Flask app for webhook
 app = Flask(__name__)
 
-
-def load_session_key():
-    if os.path.exists(SESSION_FILE):
-        with open(SESSION_FILE, 'r') as f:
-            data = json.load(f)
-            return data.get('session_key')
-    return None
-
-
-def save_session_key(session_key):
-    with open(SESSION_FILE, 'w') as f:
-        json.dump({'session_key': session_key}, f)
-
-
-def get_lastfm_session_key():
-    if LASTFM_SESSION_KEY:
-        return LASTFM_SESSION_KEY
+def get_lastfm_session_key(user, username):
+    if user.get("lastfm_session_key"):
+        return user.get("lastfm_session_key")
     
-    network = pylast.LastFMNetwork(api_key=LASTFM_API_KEY, api_secret=LASTFM_API_SECRET)
+    network = pylast.LastFMNetwork(api_key=user["lastfm_api_key"], api_secret=user["lastfm_api_secret"])
     sg = pylast.SessionKeyGenerator(network)
     url = sg.get_web_auth_url()
 
@@ -59,7 +34,11 @@ def get_lastfm_session_key():
     while True:
         try:
             session_key = sg.get_web_auth_session_key(url)
-            set_key('.env', 'LASTFM_SESSION_KEY', session_key)
+            config["users"][username]["lastfm_session_key"] = session_key
+
+            with open("config.yaml", "w") as file:
+                yaml.dump(config, file, default_flow_style=False, sort_keys=False)
+
             return session_key
         except pylast.WSError:
             print("Waiting for authorization...")
@@ -68,6 +47,7 @@ def get_lastfm_session_key():
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
+    print("in webhook")
     if request.headers.get('Content-Type') == 'application/json':
         outer_data = request.json
     else:
@@ -83,10 +63,11 @@ def webhook():
     else:
         data = outer_data
 
-    event = data.get('event')
     username = data.get('Account', {}).get('title')
+    user = users.get(username)
 
-    if PLEX_USER != '' and username != PLEX_USER:
+    if not user:
+        print("test")
         return jsonify({"status": "ignored"}), 200
     
     # uncomment for debugging:
@@ -94,7 +75,6 @@ def webhook():
     #print(json.dumps(data, indent=2))
     
     metadata = data.get('Metadata', {})
-    guid = metadata.get('Guid', {})
 
     if 'Guid' in metadata:
         mbid = metadata['Guid'][0]['id'][7:]
@@ -110,10 +90,14 @@ def webhook():
         'mbid': mbid
     }
 
+    print(track_info)
+
     if metadata.get('type') == 'track':
+        event = data.get('event')
+
         if event in ['media.play','playback.started', 'media.resume']:
                 try:
-                    network.update_now_playing(
+                    get_lastfm_user(user, username).update_now_playing(
                         artist=track_info['artist'],
                         title=track_info['title'],
                         album=track_info['album'],
@@ -130,9 +114,9 @@ def webhook():
             # Last.fm automatically clears now playing after a while
             print("Playback paused")
         elif event == 'media.scrobble':
-            if ENABLE_SCROBBLING:
+            if user["enable_scrobbling"]:
                     track_info['timestamp'] = time.time()
-                    network.scrobble(
+                    get_lastfm_user(user, username).scrobble(
                                 artist=track_info['artist'],
                                 title=track_info['title'],
                                 album=track_info['album'],
@@ -147,20 +131,20 @@ def webhook():
         
     return jsonify({"status": "success"}), 200
 
+def get_lastfm_user(user, username):
+    network = pylast.LastFMNetwork(
+        api_key=user["lastfm_api_key"],
+        api_secret=user["lastfm_api_secret"],
+        session_key=get_lastfm_session_key(user, username)
+    )
+
+    return network
 
 def main():
     global network
-    
-    # Connect to Last.fm
-    session_key = get_lastfm_session_key()
-    network = pylast.LastFMNetwork(
-        api_key=LASTFM_API_KEY,
-        api_secret=LASTFM_API_SECRET,
-        session_key=session_key
-    )
 
     print("Script started. Waiting for Plex webhooks...")
-    app.run(host='0.0.0.0', port=PORT)
+    app.run(host='0.0.0.0', port=config["webhook_port"])
 
 if __name__ == "__main__":
     main()

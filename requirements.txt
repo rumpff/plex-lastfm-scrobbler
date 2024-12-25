@@ -2,3 +2,4 @@ plexapi
 pylast
 Flask
 python-dotenv
+pyyaml

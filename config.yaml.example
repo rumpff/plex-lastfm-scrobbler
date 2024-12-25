@@ -1,0 +1,9 @@
+webhook_port: # webhook will send to this port (example: 5000)
+plex_url: # your plex server (example: http://localhost:32400)
+x_plex_token: # https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+users:
+  miitchel:
+    lastfm_api_key: # create an api account on https://www.last.fm/api/account/create
+    lastfm_api_secret: 
+    lastfm_session_key: # LEAVE EMPTY
+    enable_scrobbling: true
