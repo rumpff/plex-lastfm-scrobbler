@@ -1,6 +1,6 @@
 # Plex to Last.fm Scrobbler
 
-This project is a Python script that integrates Plex Media Server with Last.fm, allowing you to scrobble your music plays from Plex to your Last.fm account using the "Scrobbling now" feature that is missing from official Plex LastFm integration.
+This is a fork by miitchel and rumpff. We added to ability to scrobble to Last.fm for multiple users. This fork uses a YAML config.
 
 ## Features
 
@@ -8,12 +8,15 @@ This project is a Python script that integrates Plex Media Server with Last.fm, 
 - Authenticates with Last.fm
 - Updates "Now Playing" status on Last.fm when a track starts playing on Plex
 - Handles play, pause, and resume events from Plex
+- Scrobbles to Last.fm
+- Handles multiple Last.fm users
+- YAML config
 
 ## Requirements
 
 - Python 3.6+
 - Plex Media Server
-- Last.fm account
+- Last.fm API account
 - Plex Webhook configured to send events to this script
 
 ## Installation
@@ -29,27 +32,52 @@ cd plex-lastfm-scrobbler
 pip install -r requirements.txt
 ```
 
-3. Copy the `.env.example` file in the project root, rename it to `.env` and add your configuration:
+3. Copy the `.env.example` file in the project root, rename it to `.env` and add your configuration:  
+Create an API account on https://www.last.fm/api/account/create
 ```
-PORT=your-port
-PLEX_URL=http://your-plex-server:32400
-PLEX_TOKEN=your-x-plex-token
-PLEX_USER=your-plex-username # Required if server admin runs this script with their X-Plex-Token, for others can be left unset
-ENABLE_SCROBBLING=true/false # On false it will only display 'Now playing' on Last.fm and it won't scrobble
-LASTFM_API_KEY=your-lastfm-api-key
-LASTFM_API_SECRET=your-lastfm-api-secret
+webhook_port:
+plex_url:
+x_plex_token:
+users:
+  plex-username:
+    lastfm_api_key: 
+    lastfm_api_secret: 
+    lastfm_session_key: # LEAVE EMPTY
+    enable_scrobbling: true
 ```
+You can add multiple users to the config, example:
+```
+webhook_port:
+plex_url:
+x_plex_token:
+users:
+  user1:
+    lastfm_api_key: 
+    lastfm_api_secret: 
+    lastfm_session_key: # LEAVE EMPTY
+    enable_scrobbling: true
+  user2:
+    lastfm_api_key: 
+    lastfm_api_secret: 
+    lastfm_session_key: # LEAVE EMPTY
+    enable_scrobbling: true
+  user3:
+    ...
+```
+
 
 ## Usage
 
-1. Run the script:
+1. Configure your Plex Media Server to send webhooks to `http://your-ip:your-port/webhook`
+
+2. Run the script:
 ```python plex_lastfm_scrobbler.py```
 
-2. The script will prompt you to authorize the application with Last.fm if it's the first time running.
+3. User starts playback
 
-3. Configure your Plex Media Server to send webhooks to `http://your-ip:your-port/webhook`
+4. The script will prompt you to authorize the application with Last.fm if it's the first time running.
 
-4. Play music on Plex, and it should now scrobble to Last.fm
+5. Play music on Plex, and it should now scrobble to Last.fm
 
 ## License
 
