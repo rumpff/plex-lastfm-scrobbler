@@ -1,6 +1,6 @@
 # Plex to Last.fm Scrobbler
 
-This is a fork by miitchel and rumpff. We added to ability to scrobble to Last.fm for multiple users. This fork uses a YAML config.
+This is a fork by miitchel and rumpff. We added to ability to actually scrobble (not only 'Now playing') to Last.fm, and for multiple users. This fork uses a YAML config instead of .env.
 
 ## Features
 
