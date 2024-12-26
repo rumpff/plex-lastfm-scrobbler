@@ -45,7 +45,8 @@ users:
     lastfm_session_key: # LEAVE EMPTY
     enable_scrobbling: true
 ```
-You can add multiple users to the config, example:
+You can add multiple users to the config. You need to be able to log into the other users' Last.fm account for the session key.  
+Example:
 ```
 webhook_port:
 plex_url:
