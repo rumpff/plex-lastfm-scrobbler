@@ -27,7 +27,7 @@ def get_lastfm_session_key(user):
     if user['user_data'].get("lastfm_session_key"):
         return user['user_data'].get("lastfm_session_key")
     
-    network = pylast.LastFMNetwork(api_key=user['user_data']["lastfm_api_key"], api_secret=user['user_data']["lastfm_api_secret"])
+    network = pylast.LastFMNetwork(api_key=config["lastfm_api_key"], api_secret=config["lastfm_api_secret"])
     sg = pylast.SessionKeyGenerator(network)
     url = sg.get_web_auth_url()
 
@@ -155,7 +155,6 @@ def webhook():
         except json.JSONDecodeError:
             print("Failed to parse payload JSON")
             return jsonify({"status": "error", "message": "Invalid payload JSON", "log_level": "ERROR"}), 400
-            return
 
     else:
         data = outer_data
@@ -166,8 +165,8 @@ def webhook():
 
 def get_lastfm_user(user):
     network = pylast.LastFMNetwork(
-        api_key=user['user_data']["lastfm_api_key"],
-        api_secret=user['user_data']["lastfm_api_secret"],
+        api_key=config["lastfm_api_key"],
+        api_secret=config["lastfm_api_secret"],
         session_key=get_lastfm_session_key(user)
     )
 
