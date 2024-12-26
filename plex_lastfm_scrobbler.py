@@ -32,7 +32,7 @@ def get_lastfm_session_key(user):
     url = sg.get_web_auth_url()
 
     print(f"Please open this URL in your browser and authorize the application: {url}")
-    webbrowser.open(url)
+    # webbrowser.open(url)
     
     while True:
         try:
