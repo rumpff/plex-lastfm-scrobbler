@@ -32,7 +32,7 @@ cd plex-lastfm-scrobbler
 pip install -r requirements.txt
 ```
 
-3. Copy the `.env.example` file in the project root, rename it to `.env` and add your configuration:  
+3. Copy the `config.yaml.example` file in the project root, rename it to `config.yaml` and add your configuration:  
 Create an API account on https://www.last.fm/api/account/create
 ```
 webhook_port:
